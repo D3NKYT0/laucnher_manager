@@ -7,18 +7,24 @@ DirectoryIndex index.php index.html
 # Previne listagem de diretórios
 Options -Indexes
 
-# Configurações para uploads grandes (gigabytes)
-# Timeouts aumentados para suportar arquivos grandes
-php_value upload_max_filesize 5G
-php_value post_max_size 5G
-php_value max_execution_time 0
-php_value max_input_time 0
-php_value memory_limit 1G
-php_value default_socket_timeout 3600
+# Headers CORS para permitir recursos do Cloudflare e outros serviços
+<IfModule mod_headers.c>
+    # Permite recursos do Cloudflare Insights
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization"
+</IfModule>
 
-# Timeouts do Apache para uploads grandes
-TimeOut 3600
-ProxyTimeout 3600
+# Configurações para uploads grandes (gigabytes)
+# NOTA: php_value pode causar erro 500 em alguns servidores
+# Se precisar dessas configurações, ajuste no php.ini do servidor
+# As linhas abaixo estão comentadas para evitar erro 500
+# php_value upload_max_filesize 5G
+# php_value post_max_size 5G
+# php_value max_execution_time 0
+# php_value max_input_time 0
+# php_value memory_limit 1G
+# php_value default_socket_timeout 3600
 
 # Páginas de erro personalizadas
 ErrorDocument 400 /errors/400.php
