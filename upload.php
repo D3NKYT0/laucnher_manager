@@ -10,7 +10,19 @@ Auth::requireAuth();
 
 // Processa upload se houver POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
+    // Configurações adicionais para uploads grandes
+    set_time_limit(0); // Remove limite de execução
+    ignore_user_abort(false); // Para se o usuário cancelar
+    
+    // Headers para uploads grandes
     header('Content-Type: application/json; charset=utf-8');
+    header('Connection: keep-alive');
+    header('Keep-Alive: timeout=3600, max=1000');
+    
+    // Desabilita buffering de saída para feedback em tempo real
+    if (ob_get_level()) {
+        ob_end_clean();
+    }
     
     $uploader = new FileUploader();
     $result = $uploader->processUpload();
@@ -277,6 +289,8 @@ $csrfToken = Security::generateCSRFToken();
 
         let lastLoaded = 0;
         let lastTime = 0;
+        let lastProgressTime = 0; // Timestamp do último progresso
+        let connectionCheckInterval = null; // Intervalo de verificação de conexão
 
         function formatBytes(bytes){
             if(bytes === 0) return '0 B';
@@ -329,6 +343,23 @@ $csrfToken = Security::generateCSRFToken();
             const xhr = new XMLHttpRequest();
             xhr.open('POST', 'upload.php', true);
             xhr.setRequestHeader('X-CSRF-Token', '<?= $csrfToken ?>');
+            
+            // Configurações para uploads grandes
+            xhr.timeout = 0; // Sem timeout (ilimitado)
+            
+            // Variável para rastrear último progresso (para detectar conexão perdida)
+            let lastProgressTime = Date.now();
+            let connectionCheckInterval = null;
+            
+            // Monitora conexão e mantém ativa durante uploads longos
+            connectionCheckInterval = setInterval(() => {
+                const now = Date.now();
+                // Se não houve progresso em 2 minutos e ainda está carregando, pode ter perdido conexão
+                if (now - lastProgressTime > 120000 && xhr.readyState < 4) {
+                    console.warn('Possível perda de conexão detectada - sem progresso há 2 minutos');
+                    statusText.innerText = "Verificando conexão...";
+                }
+            }, 30000); // Verifica a cada 30 segundos
 
             const startTime = performance.now();
             lastLoaded = 0;
@@ -339,6 +370,9 @@ $csrfToken = Security::generateCSRFToken();
                     const now = performance.now();
                     const loaded = e.loaded;
                     const total = e.total;
+                    
+                    // Atualiza timestamp do último progresso
+                    lastProgressTime = Date.now();
 
                     const percentVal = Math.round((loaded/total) * 100);
                     bar.style.width = percentVal + '%';
@@ -358,10 +392,15 @@ $csrfToken = Security::generateCSRFToken();
                     etaText.innerText = formatTime(eta);
 
                     statusText.innerText = `Enviando... (${formatBytes(loaded)} / ${formatBytes(total)})`;
+                    
+                    // Atualiza título da aba para mostrar progresso
+                    document.title = `Upload: ${percentVal}% - Launcher Manager`;
                 }
             });
 
             xhr.onload = () => {
+                clearInterval(connectionCheckInterval); // Limpa intervalo de verificação
+                document.title = 'Upload de Arquivos - Sistema Seguro'; // Restaura título
                 btnUpload.disabled = false;
 
                 let json;
@@ -420,11 +459,20 @@ $csrfToken = Security::generateCSRFToken();
             };
 
             xhr.onerror = () => {
+                clearInterval(connectionCheckInterval); // Limpa intervalo de verificação
+                document.title = 'Upload de Arquivos - Sistema Seguro'; // Restaura título
                 btnUpload.disabled = false;
-                resultDiv.innerHTML = `<div class="error">Erro de comunicação com o servidor</div>`;
-                statusText.innerText = "Erro";
+                resultDiv.innerHTML = `<div class="error">Erro de comunicação com o servidor. Verifique sua conexão e tente novamente.</div>`;
+                statusText.innerText = "Erro de Conexão";
                 bar.style.width = '0%';
                 percent.innerText = '0%';
+            };
+            
+            xhr.onabort = () => {
+                clearInterval(connectionCheckInterval);
+                document.title = 'Upload de Arquivos - Sistema Seguro';
+                btnUpload.disabled = false;
+                statusText.innerText = "Upload cancelado pelo usuário";
             };
 
             xhr.send(form);

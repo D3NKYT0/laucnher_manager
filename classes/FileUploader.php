@@ -19,11 +19,21 @@ class FileUploader {
      */
     public function processUpload(): array {
         try {
+            // Configurações para uploads grandes
+            set_time_limit(0); // Remove limite de execução
+            ignore_user_abort(false); // Para se o usuário cancelar
+            
+            // Manter sessão viva durante uploads longos
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_write_close(); // Libera bloqueio de sessão
+                session_start(); // Reabre sessão
+            }
+            
             // Verifica autenticação
             Auth::requireAuth();
             
-            // Verifica rate limiting
-            if (!Security::checkRateLimit('upload', 10, 3600)) {
+            // Verifica rate limiting (aumentado para arquivos grandes)
+            if (!Security::checkRateLimit('upload', 5, 3600)) {
                 throw new Exception('Muitos uploads realizados. Aguarde antes de tentar novamente.');
             }
             
@@ -31,6 +41,15 @@ class FileUploader {
             $csrfToken = $_POST[CSRF_TOKEN_NAME] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
             if (!Security::validateCSRFToken($csrfToken)) {
                 throw new Exception('Token de segurança inválido. Recarregue a página e tente novamente.');
+            }
+            
+            // Envia um ping de progresso para manter conexão viva (apenas para arquivos grandes)
+            if (isset($_FILES['file']) && $_FILES['file']['size'] > 100 * 1024 * 1024) { // Arquivos > 100MB
+                // Flush para enviar headers imediatamente
+                if (ob_get_level()) {
+                    ob_end_flush();
+                }
+                flush();
             }
             
             // Verifica arquivo

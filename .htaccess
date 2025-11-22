@@ -7,6 +7,19 @@ DirectoryIndex index.php index.html
 # Previne listagem de diretórios
 Options -Indexes
 
+# Configurações para uploads grandes (gigabytes)
+# Timeouts aumentados para suportar arquivos grandes
+php_value upload_max_filesize 5G
+php_value post_max_size 5G
+php_value max_execution_time 0
+php_value max_input_time 0
+php_value memory_limit 1G
+php_value default_socket_timeout 3600
+
+# Timeouts do Apache para uploads grandes
+TimeOut 3600
+ProxyTimeout 3600
+
 # Páginas de erro personalizadas
 ErrorDocument 400 /errors/400.php
 ErrorDocument 401 /errors/401.php

@@ -1,0 +1,47 @@
+# Sistema de Upload - Launcher Manager
+
+# Diretórios de sistema
+/database/*.db
+/database/*.db-shm
+/database/*.db-wal
+/logs/*.log
+/uploads/*
+!/uploads/.htaccess
+
+# Arquivos temporários
+*.tmp
+*.temp
+*.cache
+*.bak
+*~
+
+# Configurações locais (se houver)
+config.local.php
+.env
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Arquivos do sistema operacional
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# Backup files
+*.backup
+*.old
+
+# Mas mantém a estrutura de diretórios
+!database/.htaccess
+!logs/.htaccess
+!uploads/.htaccess
+

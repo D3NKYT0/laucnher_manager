@@ -34,9 +34,9 @@ define('SESSION_LIFETIME', 3600); // 1 hora
 // Configurações de Upload
 // =========================
 
-// Limites de tamanho (em bytes)
-define('MAX_FILE_SIZE', 500 * 1024 * 1024); // 500 MB
-define('MAX_TOTAL_SIZE', 1024 * 1024 * 1024); // 1 GB total
+// Limites de tamanho (em bytes) - Aumentado para suportar arquivos grandes
+define('MAX_FILE_SIZE', 5 * 1024 * 1024 * 1024); // 5 GB
+define('MAX_TOTAL_SIZE', 10 * 1024 * 1024 * 1024); // 10 GB total
 
 // Diretórios
 define('BASE_DIR', __DIR__);
@@ -78,12 +78,14 @@ ini_set('display_errors', 0); // Não exibir erros ao usuário
 ini_set('log_errors', 1);
 // error_log será configurado após LOG_DIR ser criado
 
-// Upload
-ini_set('upload_max_filesize', '500M');
-ini_set('post_max_size', '520M');
-ini_set('max_execution_time', 300); // 5 minutos
-ini_set('max_input_time', 300);
-ini_set('memory_limit', '512M');
+// Upload - Configurações para arquivos grandes (gigabytes)
+ini_set('upload_max_filesize', '5G'); // 5 GB
+ini_set('post_max_size', '5G'); // 5 GB
+ini_set('max_execution_time', 0); // Sem limite de tempo (0 = ilimitado)
+ini_set('max_input_time', 0); // Sem limite de tempo de entrada
+ini_set('memory_limit', '1G'); // 1 GB de memória
+ini_set('default_socket_timeout', 3600); // 1 hora para sockets
+set_time_limit(0); // Remove limite de execução do script
 
 // =========================
 // Helpers
