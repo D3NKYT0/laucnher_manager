@@ -1,0 +1,34 @@
+# Proteção do Sistema de Upload - Versão para XAMPP
+# Se este arquivo ainda causar erro 500, delete-o e o sistema funcionará sem proteções
+
+# Define index.php como página padrão
+DirectoryIndex index.php index.html
+
+# Previne listagem de diretórios
+Options -Indexes
+
+# Páginas de erro personalizadas
+ErrorDocument 400 /errors/400.php
+ErrorDocument 401 /errors/401.php
+ErrorDocument 403 /errors/403.php
+ErrorDocument 404 /errors/404.php
+ErrorDocument 500 /errors/500.php
+ErrorDocument 503 /errors/503.php
+
+# Redireciona raiz para index.php se não especificar arquivo
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} !^/index\.php$
+    RewriteRule ^$ index.php [L]
+</IfModule>
+
+# Proteção básica - bloqueia acesso direto a arquivos sensíveis
+<FilesMatch "^config\.php$">
+    Require all denied
+</FilesMatch>
+
+<FilesMatch "^.*\.log$">
+    Require all denied
+</FilesMatch>

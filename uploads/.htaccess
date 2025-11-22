@@ -1,0 +1,6 @@
+# Proteção do diretório de uploads
+# Nenhum arquivo neste diretório deve ser acessível diretamente via web
+
+Order allow,deny
+Deny from all
+
